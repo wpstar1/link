@@ -15,9 +15,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 function generateShortCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    // 최대한 짧게: 2자리 + 숫자와 소문자만 사용 (가독성 향상)
+    const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
     let result = '';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 2; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
