@@ -7,6 +7,40 @@ const app = express();
 const urlDatabase = new Map();
 const userLinks = new Map();
 
+// 테스트용 샘플 데이터 (개발/데모용)
+function initSampleData() {
+    const sampleUserId = 'demo-user';
+    const sampleLinks = ['a1', 'b2', 'c3'];
+    
+    // 샘플 URL 데이터
+    urlDatabase.set('a1', {
+        originalUrl: 'https://www.google.com',
+        clicks: 15,
+        createdAt: new Date(Date.now() - 86400000), // 1일 전
+        userId: sampleUserId
+    });
+    
+    urlDatabase.set('b2', {
+        originalUrl: 'https://github.com/wpstar1/link',
+        clicks: 7,
+        createdAt: new Date(Date.now() - 43200000), // 12시간 전
+        userId: sampleUserId
+    });
+    
+    urlDatabase.set('c3', {
+        originalUrl: 'https://vercel.com',
+        clicks: 3,
+        createdAt: new Date(Date.now() - 3600000), // 1시간 전
+        userId: sampleUserId
+    });
+    
+    // 사용자별 링크 매핑
+    userLinks.set(sampleUserId, sampleLinks);
+}
+
+// 서버 시작 시 샘플 데이터 초기화
+initSampleData();
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
@@ -40,9 +74,9 @@ function generateUserId() {
 function getUserId(req, res) {
     let userId = req.cookies.userId;
     if (!userId) {
-        userId = generateUserId();
+        // 처음 방문자는 샘플 데이터를 볼 수 있도록 demo-user로 설정
+        userId = 'demo-user';
         res.cookie('userId', userId, { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: true });
-        userLinks.set(userId, []);
     }
     if (!userLinks.has(userId)) {
         userLinks.set(userId, []);
