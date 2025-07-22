@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShotLink - URL 단축 서비스</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 ShotLink</h1>
+            <p>긴 URL을 짧고 간편하게!</p>
+            <div class="nav-buttons">
+                <a href="/my-links" class="nav-btn">📋 내 링크들</a>
+            </div>
+        </header>
+
+        <main>
+            <div class="form-container">
+                <form action="/shorten" method="POST" class="url-form">
+                    <div class="input-group">
+                        <input 
+                            type="url" 
+                            name="url" 
+                            placeholder="https://example.com 형식으로 입력하세요"
+                            class="url-input"
+                            required
+                        >
+                        <button type="submit" class="submit-btn">단축하기</button>
+                    </div>
+                </form>
+            </div>
+
+            <% if (error) { %>
+                <div class="message error">
+                    <span class="icon">❌</span>
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <% if (shortUrl) { %>
+                <div class="result-container">
+                    <div class="message success">
+                        <span class="icon">✅</span>
+                        단축 URL이 생성되었습니다!
+                    </div>
+                    
+                    <div class="result-box">
+                        <label>단축된 URL:</label>
+                        <div class="url-result">
+                            <input 
+                                type="text" 
+                                value="<%= shortUrl %>" 
+                                readonly 
+                                class="result-input"
+                                id="shortUrl"
+                            >
+                            <button onclick="copyToClipboard()" class="copy-btn">복사</button>
+                        </div>
+                        <small class="hint">위 링크를 클릭하면 원본 URL로 이동합니다.</small>
+                        <% if (shortCode) { %>
+                            <div class="action-buttons">
+                                <a href="/stats/<%= shortCode %>" class="stats-btn" target="_blank">📊 통계 보기</a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            <% } %>
+        </main>
+
+        <footer>
+            <p>간단하고 빠른 URL 단축 서비스 | ShotLink</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const urlInput = document.getElementById('shortUrl');
+            urlInput.select();
+            urlInput.setSelectionRange(0, 99999);
+            
+            try {
+                document.execCommand('copy');
+                
+                const copyBtn = document.querySelector('.copy-btn');
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '복사됨!';
+                copyBtn.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.background = '';
+                }, 2000);
+            } catch (err) {
+                alert('복사에 실패했습니다. 수동으로 복사해주세요.');
+            }
+        }
+
+        document.querySelector('.url-form').addEventListener('submit', function(e) {
+            const urlInput = document.querySelector('.url-input');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                e.preventDefault();
+                alert('URL을 입력해주세요.');
+                return;
+            }
+            
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                e.preventDefault();
+                alert('http:// 또는 https://로 시작하는 URL을 입력해주세요.');
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

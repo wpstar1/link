@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통계 - <%= shortCode %> | ShotLink</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 링크 통계</h1>
+            <p><code><%= shortCode %></code> 코드의 상세 정보</p>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn">🔗 홈으로</a>
+                <a href="/my-links" class="nav-btn">📋 내 링크들</a>
+            </div>
+        </header>
+
+        <main>
+            <div class="stats-container">
+                <div class="stats-header">
+                    <h2>🎯 링크 정보</h2>
+                    <div class="short-code-display">
+                        <span class="code-label">단축 코드:</span>
+                        <code class="short-code"><%= shortCode %></code>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card main-stat">
+                        <div class="stat-icon">👆</div>
+                        <div class="stat-content">
+                            <h3>총 클릭 수</h3>
+                            <div class="big-number"><%= clicks %></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-content">
+                            <h3>생성 일시</h3>
+                            <div class="stat-value">
+                                <%= new Date(createdAt).toLocaleDateString('ko-KR', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric'
+                                }) %>
+                            </div>
+                            <div class="stat-sub">
+                                <%= new Date(createdAt).toLocaleTimeString('ko-KR') %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-content">
+                            <h3>생성 후 경과</h3>
+                            <div class="stat-value" id="elapsed-time">
+                                계산 중...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="url-info">
+                    <h3>🔗 URL 정보</h3>
+                    
+                    <div class="url-section">
+                        <label>단축 URL:</label>
+                        <div class="url-display">
+                            <input type="text" value="<%= shortUrl %>" readonly class="url-input-readonly" id="shortUrlInput">
+                            <button onclick="copyUrl('<%= shortUrl %>')" class="copy-btn-small">복사</button>
+                        </div>
+                        <div class="url-actions">
+                            <a href="<%= shortUrl %>" target="_blank" class="visit-btn">🚀 방문하기</a>
+                        </div>
+                    </div>
+
+                    <div class="url-section">
+                        <label>원본 URL:</label>
+                        <div class="original-url-display">
+                            <a href="<%= originalUrl %>" target="_blank" class="original-link-full">
+                                <%= originalUrl %>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="performance-info">
+                    <h3>📈 성과 분석</h3>
+                    <div class="performance-grid">
+                        <div class="performance-card">
+                            <div class="perf-label">일일 평균 클릭</div>
+                            <div class="perf-value" id="daily-avg">계산 중...</div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="perf-label">링크 상태</div>
+                            <div class="perf-value">
+                                <span class="status-active">🟢 활성</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>간단하고 빠른 URL 단축 서비스 | ShotLink</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyUrl(url) {
+            navigator.clipboard.writeText(url).then(function() {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '복사됨!';
+                btn.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(function() {
+                const input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '복사됨!';
+                btn.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            });
+        }
+
+        function calculateElapsedTime() {
+            const createdAt = new Date('<%= createdAt %>');
+            const now = new Date();
+            const diffMs = now - createdAt;
+            
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            let elapsedText = '';
+            if (diffDays > 0) {
+                elapsedText += diffDays + '일 ';
+            }
+            if (diffHours > 0) {
+                elapsedText += diffHours + '시간 ';
+            }
+            if (diffMinutes > 0) {
+                elapsedText += diffMinutes + '분';
+            }
+            if (elapsedText === '') {
+                elapsedText = '방금 전';
+            }
+            
+            document.getElementById('elapsed-time').textContent = elapsedText;
+            
+            const totalDays = diffDays || 1;
+            const dailyAvg = (<%= clicks %> / totalDays).toFixed(1);
+            document.getElementById('daily-avg').textContent = dailyAvg + ' 회';
+        }
+
+        calculateElapsedTime();
+        setInterval(calculateElapsedTime, 60000);
+    </script>
+</body>
+</html>
