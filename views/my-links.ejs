@@ -29,40 +29,32 @@
                     <% links.forEach(function(link) { %>
                         <div class="link-card">
                             <div class="link-header">
-                                <h3>🔗 <%= link.shortCode %></h3>
-                                <div class="clicks-badge">
-                                    👆 <%= link.clicks %>회
+                                <div class="link-info">
+                                    <h3>🔗 <%= link.shortCode %></h3>
+                                    <div class="link-stats">
+                                        <span class="visits">👆 <%= link.clicks %>명 방문</span>
+                                        <span class="date">📅 <%= new Date(link.createdAt).toLocaleDateString('ko-KR') %></span>
+                                    </div>
                                 </div>
                             </div>
                             
                             <div class="link-content">
                                 <div class="url-section">
-                                    <label>단축 URL:</label>
                                     <div class="url-display">
                                         <input type="text" value="<%= link.shortUrl %>" readonly class="url-input-readonly">
                                         <button onclick="copyUrl('<%= link.shortUrl %>')" class="copy-btn-small">복사</button>
                                     </div>
                                 </div>
                                 
-                                <div class="url-section">
-                                    <label>원본 URL:</label>
-                                    <div class="original-url">
-                                        <a href="<%= link.originalUrl %>" target="_blank" class="original-link">
-                                            <%= link.originalUrl.length > 50 ? link.originalUrl.substring(0, 50) + '...' : link.originalUrl %>
-                                        </a>
-                                    </div>
-                                </div>
-                                
-                                <div class="link-meta">
-                                    <span class="created-date">
-                                        📅 <%= new Date(link.createdAt).toLocaleString('ko-KR') %>
-                                    </span>
+                                <div class="original-url">
+                                    <a href="<%= link.originalUrl %>" target="_blank" class="original-link">
+                                        → <%= link.originalUrl.length > 60 ? link.originalUrl.substring(0, 60) + '...' : link.originalUrl %>
+                                    </a>
                                 </div>
                             </div>
                             
                             <div class="link-actions">
                                 <a href="<%= link.shortUrl %>" target="_blank" class="action-btn visit-btn">🚀 방문하기</a>
-                                <a href="/stats/<%= link.shortCode %>" class="action-btn stats-btn">📊 통계보기</a>
                             </div>
                         </div>
                     <% }); %>
