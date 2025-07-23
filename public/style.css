@@ -61,24 +61,35 @@ header p {
 .url-input {
     flex: 1;
     padding: 1rem 1.5rem;
-    border: none;
+    border: 2px solid #e9ecef;
     font-size: 1rem;
     outline: none;
     background: #f8f9fa;
+    border-radius: 12px 0 0 12px;
+    transition: all 0.3s ease;
 }
 
 .url-input:focus {
     background: #fff;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.url-input::placeholder {
+    color: #6c757d;
+    font-weight: 500;
 }
 
 .submit-btn {
     padding: 1rem 2rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border: none;
+    border: 2px solid #667eea;
+    border-left: none;
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
+    border-radius: 0 12px 12px 0;
     transition: all 0.3s ease;
 }
 
