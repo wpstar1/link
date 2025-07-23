@@ -86,10 +86,24 @@ function getUserId(req, res) {
 
 app.get('/', (req, res) => {
     const userId = getUserId(req, res);
+    const userLinkCodes = userLinks.get(userId) || [];
+    
+    const links = userLinkCodes.map(code => {
+        const urlData = urlDatabase.get(code);
+        return {
+            shortCode: code,
+            originalUrl: urlData.originalUrl,
+            clicks: urlData.clicks,
+            createdAt: urlData.createdAt,
+            shortUrl: `${req.protocol}://${req.get('host')}/${code}`
+        };
+    }).reverse();
+
     res.render('index', { 
         shortUrl: null, 
         error: null,
-        shortCode: null 
+        shortCode: null,
+        links: links
     });
 });
 
@@ -97,11 +111,27 @@ app.post('/shorten', (req, res) => {
     const { url } = req.body;
     const userId = getUserId(req, res);
     
+    // 현재 사용자의 링크 목록 가져오기
+    const getUserLinks = () => {
+        const userLinkCodes = userLinks.get(userId) || [];
+        return userLinkCodes.map(code => {
+            const urlData = urlDatabase.get(code);
+            return {
+                shortCode: code,
+                originalUrl: urlData.originalUrl,
+                clicks: urlData.clicks,
+                createdAt: urlData.createdAt,
+                shortUrl: `${req.protocol}://${req.get('host')}/${code}`
+            };
+        }).reverse();
+    };
+    
     if (!url) {
         return res.render('index', { 
             shortUrl: null, 
             error: 'URL을 입력해주세요.',
-            shortCode: null 
+            shortCode: null,
+            links: getUserLinks()
         });
     }
 
@@ -109,7 +139,8 @@ app.post('/shorten', (req, res) => {
         return res.render('index', { 
             shortUrl: null, 
             error: '유효한 URL을 입력해주세요.',
-            shortCode: null 
+            shortCode: null,
+            links: getUserLinks()
         });
     }
 
@@ -134,7 +165,8 @@ app.post('/shorten', (req, res) => {
     res.render('index', { 
         shortUrl, 
         error: null,
-        shortCode 
+        shortCode,
+        links: getUserLinks()
     });
 });
 

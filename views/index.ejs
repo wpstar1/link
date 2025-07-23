@@ -67,6 +67,39 @@
                     </div>
                 </div>
             <% } %>
+
+            <!-- 내 링크 목록 섹션 -->
+            <% if (links && links.length > 0) { %>
+                <div class="my-links-section">
+                    <h2>📋 내가 만든 링크들</h2>
+                    <div class="links-grid">
+                        <% links.forEach(function(link) { %>
+                            <div class="link-card-mini">
+                                <div class="link-header-mini">
+                                    <h4>🔗 <%= link.shortCode %></h4>
+                                    <div class="link-stats-mini">
+                                        <span class="visits">👆 <%= link.clicks %>명</span>
+                                        <span class="date">📅 <%= new Date(link.createdAt).toLocaleDateString('ko-KR') %></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="link-content-mini">
+                                    <div class="url-display-mini">
+                                        <input type="text" value="<%= link.shortUrl %>" readonly class="url-input-mini">
+                                        <button onclick="copyUrl('<%= link.shortUrl %>')" class="copy-btn-mini">복사</button>
+                                    </div>
+                                    
+                                    <div class="original-url-mini">
+                                        <a href="<%= link.originalUrl %>" target="_blank">
+                                            → <%= link.originalUrl.length > 40 ? link.originalUrl.substring(0, 40) + '...' : link.originalUrl %>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } %>
         </main>
 
         <footer>
@@ -95,6 +128,37 @@
             } catch (err) {
                 alert('복사에 실패했습니다. 수동으로 복사해주세요.');
             }
+        }
+
+        function copyUrl(url) {
+            navigator.clipboard.writeText(url).then(function() {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '복사됨!';
+                btn.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(function() {
+                const input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '복사됨!';
+                btn.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            });
         }
 
         document.querySelector('.url-form').addEventListener('submit', function(e) {
