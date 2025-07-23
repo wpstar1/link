@@ -146,7 +146,7 @@ app.get('/', (req, res) => {
             originalUrl: urlData.originalUrl,
             clicks: urlData.clicks,
             createdAt: urlData.createdAt,
-            shortUrl: `${req.protocol}://${req.get('host')}/${code}`
+            shortUrl: `https://wpst.shop/${code}`
         });
     }
     
@@ -189,7 +189,7 @@ app.post('/shorten', (req, res) => {
                 originalUrl: urlData.originalUrl,
                 clicks: urlData.clicks,
                 createdAt: urlData.createdAt,
-                shortUrl: `${req.protocol}://${req.get('host')}/${code}`
+                shortUrl: `https://wpst.shop/${code}`
             });
         }
         
@@ -232,6 +232,21 @@ app.post('/shorten', (req, res) => {
         });
     }
 
+    // 중복 URL 확인
+    for (const [code, urlData] of urlDatabase.entries()) {
+        if (urlData.originalUrl === url) {
+            const existingShortUrl = `https://wpst.shop/${code}`;
+            const data = getAllLinksWithPagination(1);
+            return res.render('index', { 
+                shortUrl: existingShortUrl, 
+                error: null,
+                shortCode: code,
+                links: data.links,
+                pagination: data.pagination
+            });
+        }
+    }
+
     let shortCode;
     do {
         shortCode = generateShortCode();
@@ -251,7 +266,7 @@ app.post('/shorten', (req, res) => {
     // 데이터 저장
     saveData();
 
-    const shortUrl = `${req.protocol}://${req.get('host')}/${shortCode}`;
+    const shortUrl = `https://wpst.shop/${shortCode}`;
     
     const data = getAllLinksWithPagination(1);
     res.render('index', { 
@@ -291,7 +306,7 @@ app.get('/my-links', (req, res) => {
             originalUrl: urlData.originalUrl,
             clicks: urlData.clicks,
             createdAt: urlData.createdAt,
-            shortUrl: `${req.protocol}://${req.get('host')}/${code}`
+            shortUrl: `https://wpst.shop/${code}`
         };
     }).reverse();
 
