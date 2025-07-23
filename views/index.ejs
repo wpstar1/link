@@ -143,6 +143,25 @@
                             </div>
                         <% }); %>
                     </div>
+                    
+                    <!-- 페이지네이션 -->
+                    <% if (links && links.length > 0 && pagination.totalPages > 1) { %>
+                        <div class="pagination">
+                            <% if (pagination.hasPrev) { %>
+                                <a href="/?page=<%= pagination.currentPage - 1 %>" class="pagination-btn">← 이전</a>
+                            <% } %>
+                            
+                            <div class="pagination-info">
+                                <span class="page-current"><%= pagination.currentPage %></span> / 
+                                <span class="page-total"><%= pagination.totalPages %></span>
+                                <small>(<%= pagination.totalLinks %>개 링크)</small>
+                            </div>
+                            
+                            <% if (pagination.hasNext) { %>
+                                <a href="/?page=<%= pagination.currentPage + 1 %>" class="pagination-btn">다음 →</a>
+                            <% } %>
+                        </div>
+                    <% } %>
                 </div>
             <% } %>
         </main>

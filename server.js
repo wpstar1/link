@@ -134,6 +134,9 @@ function getUserId(req, res) {
 
 app.get('/', (req, res) => {
     const userId = getUserId(req, res);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10; // 페이지당 10개씩 표시
+    const offset = (page - 1) * limit;
     
     // 모든 링크들을 가져와서 최신순으로 정렬
     const allLinks = [];
@@ -148,13 +151,25 @@ app.get('/', (req, res) => {
     }
     
     // 생성일 기준으로 최신순 정렬
-    const links = allLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const sortedLinks = allLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // 페이지네이션 적용
+    const totalLinks = sortedLinks.length;
+    const totalPages = Math.ceil(totalLinks / limit);
+    const links = sortedLinks.slice(offset, offset + limit);
 
     res.render('index', { 
         shortUrl: null, 
         error: null,
         shortCode: null,
-        links: links
+        links: links,
+        pagination: {
+            currentPage: page,
+            totalPages: totalPages,
+            totalLinks: totalLinks,
+            hasNext: page < totalPages,
+            hasPrev: page > 1
+        }
     });
 });
 
@@ -162,8 +177,11 @@ app.post('/shorten', (req, res) => {
     const { url } = req.body;
     const userId = getUserId(req, res);
     
-    // 모든 링크 목록 가져오기
-    const getAllLinks = () => {
+    // 모든 링크 목록 가져오기 (페이지네이션 포함)
+    const getAllLinksWithPagination = (page = 1) => {
+        const limit = 10;
+        const offset = (page - 1) * limit;
+        
         const allLinks = [];
         for (const [code, urlData] of urlDatabase.entries()) {
             allLinks.push({
@@ -174,24 +192,43 @@ app.post('/shorten', (req, res) => {
                 shortUrl: `${req.protocol}://${req.get('host')}/${code}`
             });
         }
-        return allLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        const sortedLinks = allLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const totalLinks = sortedLinks.length;
+        const totalPages = Math.ceil(totalLinks / limit);
+        const links = sortedLinks.slice(offset, offset + limit);
+        
+        return {
+            links: links,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalLinks: totalLinks,
+                hasNext: page < totalPages,
+                hasPrev: page > 1
+            }
+        };
     };
     
     if (!url) {
+        const data = getAllLinksWithPagination(1);
         return res.render('index', { 
             shortUrl: null, 
             error: 'URL을 입력해주세요.',
             shortCode: null,
-            links: getAllLinks()
+            links: data.links,
+            pagination: data.pagination
         });
     }
 
     if (!isValidUrl(url)) {
+        const data = getAllLinksWithPagination(1);
         return res.render('index', { 
             shortUrl: null, 
             error: '유효한 URL을 입력해주세요.',
             shortCode: null,
-            links: getAllLinks()
+            links: data.links,
+            pagination: data.pagination
         });
     }
 
@@ -207,7 +244,7 @@ app.post('/shorten', (req, res) => {
         userId: userId
     });
 
-    const userLinkList = userLinks.get(userId);
+    const userLinkList = userLinks.get(userId) || [];
     userLinkList.push(shortCode);
     userLinks.set(userId, userLinkList);
 
@@ -216,11 +253,13 @@ app.post('/shorten', (req, res) => {
 
     const shortUrl = `${req.protocol}://${req.get('host')}/${shortCode}`;
     
+    const data = getAllLinksWithPagination(1);
     res.render('index', { 
         shortUrl, 
         error: null,
         shortCode,
-        links: getUserLinks()
+        links: data.links,
+        pagination: data.pagination
     });
 });
 
