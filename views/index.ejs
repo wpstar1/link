@@ -109,11 +109,6 @@
                             <button onclick="copyToClipboard()" class="copy-btn">복사</button>
                         </div>
                         <small class="hint">위 링크를 클릭하면 원본 URL로 이동합니다.</small>
-                        <% if (shortCode) { %>
-                            <div class="action-buttons">
-                                <a href="/stats/<%= shortCode %>" class="stats-btn" target="_blank">📊 통계 보기</a>
-                            </div>
-                        <% } %>
                     </div>
                 </div>
             <% } %>
