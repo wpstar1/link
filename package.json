@@ -16,7 +16,7 @@
     "free-url-shortener"
   ],
   "author": "WPST Shop",
-  "homepage": "https://www.wpst.shop",
+  "homepage": "https://wpst.shop",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",

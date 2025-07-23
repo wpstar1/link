@@ -1,6 +1,6 @@
 # 🔗 WPST Shop - 무료 URL 단축 서비스
 
-**🌐 https://www.wpst.shop**
+**🌐 https://wpst.shop**
 
 무료로 제공되는 한국 최고의 URL 단축 서비스입니다. 긴 링크를 **2자리 초단축 코드**로 단축하여 공유하기 쉽게 만들고, 실시간 클릭 통계와 방문자 분석 기능을 제공하는 웹 애플리케이션입니다.
 
@@ -126,4 +126,4 @@ MIT License
 
 **WPST Shop** - 한국 최고의 무료 URL 단축 서비스 🚀
 
-🌐 **https://www.wpst.shop** - 지금 바로 이용해보세요!
+🌐 **https://wpst.shop** - 지금 바로 이용해보세요!
