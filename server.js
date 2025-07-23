@@ -145,7 +145,8 @@ app.get('/:code', (req, res) => {
     if (!urlData) {
         return res.status(404).render('index', { 
             shortUrl: null, 
-            error: '존재하지 않는 단축 URL입니다.' 
+            error: '존재하지 않는 단축 URL입니다.',
+            shortCode: null 
         });
     }
 
