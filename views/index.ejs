@@ -78,7 +78,7 @@
                                 <div class="link-header-mini">
                                     <h4>🔗 <%= link.shortCode %></h4>
                                     <div class="link-stats-mini">
-                                        <span class="visits">👆 <%= link.clicks %>명</span>
+                                        <span class="visits">총방문자 👆 <%= link.clicks %>명</span>
                                         <span class="date">📅 <%= new Date(link.createdAt).toLocaleDateString('ko-KR') %></span>
                                     </div>
                                 </div>
@@ -87,12 +87,6 @@
                                     <div class="url-display-mini">
                                         <a href="<%= link.shortUrl %>" target="_blank" class="short-url-link">
                                             <%= link.shortUrl %>
-                                        </a>
-                                    </div>
-                                    
-                                    <div class="original-url-mini">
-                                        <a href="<%= link.originalUrl %>" target="_blank">
-                                            → <%= link.originalUrl.length > 50 ? link.originalUrl.substring(0, 50) + '...' : link.originalUrl %>
                                         </a>
                                     </div>
                                 </div>
