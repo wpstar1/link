@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /public/
+Disallow: /my-links
+Disallow: /stats/
+
+# Sitemap
+Sitemap: https://www.wpst.shop/sitemap.xml
+
+# Crawl-delay (초 단위)
+Crawl-delay: 1

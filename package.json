@@ -1,7 +1,7 @@
 {
-  "name": "shotlink",
+  "name": "wpst-shop-url-shortener",
   "version": "1.0.0",
-  "description": "간단한 URL 단축 서비스",
+  "description": "WPST Shop - 무료 URL 단축 서비스",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,9 +10,13 @@
   "keywords": [
     "url-shortener",
     "express",
-    "nodejs"
+    "nodejs",
+    "wpst-shop",
+    "korean-url-shortener",
+    "free-url-shortener"
   ],
-  "author": "",
+  "author": "WPST Shop",
+  "homepage": "https://www.wpst.shop",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
