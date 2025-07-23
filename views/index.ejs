@@ -71,7 +71,7 @@
             <!-- 내 링크 목록 섹션 -->
             <% if (links && links.length > 0) { %>
                 <div class="my-links-section">
-                    <h2>📋 내가 만든 링크들</h2>
+                    <h2>📋 회원들이 만든 링크들</h2>
                     <div class="links-grid">
                         <% links.forEach(function(link) { %>
                             <div class="link-card-mini">
@@ -85,13 +85,14 @@
                                 
                                 <div class="link-content-mini">
                                     <div class="url-display-mini">
-                                        <input type="text" value="<%= link.shortUrl %>" readonly class="url-input-mini">
-                                        <button onclick="copyUrl('<%= link.shortUrl %>')" class="copy-btn-mini">복사</button>
+                                        <a href="<%= link.shortUrl %>" target="_blank" class="short-url-link">
+                                            <%= link.shortUrl %>
+                                        </a>
                                     </div>
                                     
                                     <div class="original-url-mini">
                                         <a href="<%= link.originalUrl %>" target="_blank">
-                                            → <%= link.originalUrl.length > 40 ? link.originalUrl.substring(0, 40) + '...' : link.originalUrl %>
+                                            → <%= link.originalUrl.length > 50 ? link.originalUrl.substring(0, 50) + '...' : link.originalUrl %>
                                         </a>
                                     </div>
                                 </div>

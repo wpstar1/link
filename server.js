@@ -2,10 +2,54 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
+const fs = require('fs');
 const app = express();
 
 const urlDatabase = new Map();
 const userLinks = new Map();
+
+// 데이터 파일 경로
+const DATA_FILE = path.join(__dirname, 'data.json');
+
+// 데이터 저장 함수
+function saveData() {
+    const data = {
+        urlDatabase: Object.fromEntries(urlDatabase),
+        userLinks: Object.fromEntries(userLinks)
+    };
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error('데이터 저장 실패:', error);
+    }
+}
+
+// 데이터 로드 함수
+function loadData() {
+    try {
+        if (fs.existsSync(DATA_FILE)) {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            
+            // urlDatabase 복원
+            if (data.urlDatabase) {
+                for (const [key, value] of Object.entries(data.urlDatabase)) {
+                    urlDatabase.set(key, value);
+                }
+            }
+            
+            // userLinks 복원
+            if (data.userLinks) {
+                for (const [key, value] of Object.entries(data.userLinks)) {
+                    userLinks.set(key, value);
+                }
+            }
+            
+            console.log('저장된 데이터 로드 완료');
+        }
+    } catch (error) {
+        console.error('데이터 로드 실패:', error);
+    }
+}
 
 // 테스트용 샘플 데이터 (개발/데모용)
 function initSampleData() {
@@ -38,8 +82,12 @@ function initSampleData() {
     userLinks.set(sampleUserId, sampleLinks);
 }
 
-// 서버 시작 시 샘플 데이터 초기화
-initSampleData();
+// 서버 시작 시 데이터 로드 후 샘플 데이터 초기화 (데이터가 없을 때만)
+loadData();
+if (urlDatabase.size === 0) {
+    initSampleData();
+    saveData(); // 샘플 데이터 저장
+}
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -86,18 +134,21 @@ function getUserId(req, res) {
 
 app.get('/', (req, res) => {
     const userId = getUserId(req, res);
-    const userLinkCodes = userLinks.get(userId) || [];
     
-    const links = userLinkCodes.map(code => {
-        const urlData = urlDatabase.get(code);
-        return {
+    // 모든 링크들을 가져와서 최신순으로 정렬
+    const allLinks = [];
+    for (const [code, urlData] of urlDatabase.entries()) {
+        allLinks.push({
             shortCode: code,
             originalUrl: urlData.originalUrl,
             clicks: urlData.clicks,
             createdAt: urlData.createdAt,
             shortUrl: `${req.protocol}://${req.get('host')}/${code}`
-        };
-    }).reverse();
+        });
+    }
+    
+    // 생성일 기준으로 최신순 정렬
+    const links = allLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.render('index', { 
         shortUrl: null, 
@@ -111,19 +162,19 @@ app.post('/shorten', (req, res) => {
     const { url } = req.body;
     const userId = getUserId(req, res);
     
-    // 현재 사용자의 링크 목록 가져오기
-    const getUserLinks = () => {
-        const userLinkCodes = userLinks.get(userId) || [];
-        return userLinkCodes.map(code => {
-            const urlData = urlDatabase.get(code);
-            return {
+    // 모든 링크 목록 가져오기
+    const getAllLinks = () => {
+        const allLinks = [];
+        for (const [code, urlData] of urlDatabase.entries()) {
+            allLinks.push({
                 shortCode: code,
                 originalUrl: urlData.originalUrl,
                 clicks: urlData.clicks,
                 createdAt: urlData.createdAt,
                 shortUrl: `${req.protocol}://${req.get('host')}/${code}`
-            };
-        }).reverse();
+            });
+        }
+        return allLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     };
     
     if (!url) {
@@ -131,7 +182,7 @@ app.post('/shorten', (req, res) => {
             shortUrl: null, 
             error: 'URL을 입력해주세요.',
             shortCode: null,
-            links: getUserLinks()
+            links: getAllLinks()
         });
     }
 
@@ -140,7 +191,7 @@ app.post('/shorten', (req, res) => {
             shortUrl: null, 
             error: '유효한 URL을 입력해주세요.',
             shortCode: null,
-            links: getUserLinks()
+            links: getAllLinks()
         });
     }
 
@@ -159,6 +210,9 @@ app.post('/shorten', (req, res) => {
     const userLinkList = userLinks.get(userId);
     userLinkList.push(shortCode);
     userLinks.set(userId, userLinkList);
+
+    // 데이터 저장
+    saveData();
 
     const shortUrl = `${req.protocol}://${req.get('host')}/${shortCode}`;
     
@@ -183,6 +237,7 @@ app.get('/:code', (req, res) => {
     }
 
     urlData.clicks += 1;
+    saveData(); // 클릭수 업데이트 저장
     res.redirect(urlData.originalUrl);
 });
 
