@@ -74,8 +74,8 @@ function generateUserId() {
 function getUserId(req, res) {
     let userId = req.cookies.userId;
     if (!userId) {
-        // 처음 방문자는 샘플 데이터를 볼 수 있도록 demo-user로 설정
-        userId = 'demo-user';
+        // 새로운 사용자에게 고유한 ID 생성
+        userId = generateUserId();
         res.cookie('userId', userId, { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: true });
     }
     if (!userLinks.has(userId)) {
