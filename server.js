@@ -373,10 +373,38 @@ app.get('/:code', (req, res) => {
     const urlData = urlDatabase.get(code);
 
     if (!urlData) {
+        // 모든 링크들을 가져와서 최신순으로 정렬
+        const allLinks = [];
+        for (const [code, urlData] of urlDatabase.entries()) {
+            allLinks.push({
+                shortCode: code,
+                originalUrl: urlData.originalUrl,
+                clicks: urlData.clicks,
+                createdAt: urlData.createdAt,
+                shortUrl: `https://wpst.shop/${code}`
+            });
+        }
+        
+        // 생성일 기준으로 최신순 정렬
+        const sortedLinks = allLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        // 첫 번째 페이지만 표시 (최대 10개)
+        const links = sortedLinks.slice(0, 10);
+        const totalLinks = sortedLinks.length;
+        const totalPages = Math.ceil(totalLinks / 10);
+        
         return res.status(404).render('index', { 
             shortUrl: null, 
             error: '존재하지 않는 단축 URL입니다.',
-            shortCode: null 
+            shortCode: null,
+            links: links,
+            pagination: {
+                currentPage: 1,
+                totalPages: totalPages,
+                totalLinks: totalLinks,
+                hasNext: totalPages > 1,
+                hasPrev: false
+            }
         });
     }
 
@@ -414,10 +442,38 @@ app.get('/stats/:code', (req, res) => {
     const urlData = urlDatabase.get(code);
 
     if (!urlData) {
+        // 모든 링크들을 가져와서 최신순으로 정렬
+        const allLinks = [];
+        for (const [code, urlData] of urlDatabase.entries()) {
+            allLinks.push({
+                shortCode: code,
+                originalUrl: urlData.originalUrl,
+                clicks: urlData.clicks,
+                createdAt: urlData.createdAt,
+                shortUrl: `https://wpst.shop/${code}`
+            });
+        }
+        
+        // 생성일 기준으로 최신순 정렬
+        const sortedLinks = allLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        // 첫 번째 페이지만 표시 (최대 10개)
+        const links = sortedLinks.slice(0, 10);
+        const totalLinks = sortedLinks.length;
+        const totalPages = Math.ceil(totalLinks / 10);
+        
         return res.status(404).render('index', { 
             shortUrl: null, 
             error: '존재하지 않는 단축 URL입니다.',
-            shortCode: null 
+            shortCode: null,
+            links: links,
+            pagination: {
+                currentPage: 1,
+                totalPages: totalPages,
+                totalLinks: totalLinks,
+                hasNext: totalPages > 1,
+                hasPrev: false
+            }
         });
     }
 
