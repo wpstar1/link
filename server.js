@@ -147,13 +147,17 @@ if (urlDatabase.size === 0) {
     console.log(`${urlDatabase.size}개의 링크 데이터가 로드되었습니다.`);
 }
 
-// 주기적으로 데이터 백업 (1분마다)
+// 주기적으로 데이터 백업 (30초마다 - 더 자주 백업하여 데이터 손실 방지)
 setInterval(() => {
     if (urlDatabase.size > 0) {
-        saveData();
-        console.log('주기적 데이터 백업 완료');
+        const backupResult = saveData();
+        if (backupResult) {
+            console.log(`주기적 데이터 백업 완료 - ${urlDatabase.size}개 링크`);
+        } else {
+            console.error('주기적 데이터 백업 실패');
+        }
     }
-}, 60 * 1000);
+}, 30 * 1000);
 
 // 프로세스 종료 시 데이터 저장
 process.on('SIGINT', () => {
@@ -183,10 +187,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 function generateShortCode() {
-    // 최대한 짧게: 2자리 + 숫자와 소문자만 사용 (가독성 향상)
+    // 6자리로 변경 - 중복 방지를 위해 충분한 조합 확보 (36^6 = 2,176,782,336개 조합)
     const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
     let result = '';
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 6; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
@@ -259,7 +263,7 @@ app.get('/', (req, res) => {
     });
 });
 
-app.post('/shorten', (req, res) => {
+app.post('/shorten', async (req, res) => {
     const { url } = req.body;
     const userId = getUserId(req, res);
     
@@ -334,26 +338,78 @@ app.post('/shorten', (req, res) => {
     }
 
     let shortCode;
+    let attempts = 0;
+    const maxAttempts = 100; // 최대 100번 시도로 중복 방지 강화
     do {
         shortCode = generateShortCode();
+        attempts++;
+        if (attempts > maxAttempts) {
+            console.error('단축 코드 생성 실패: 너무 많은 시도');
+            const data = getAllLinksWithPagination(1);
+            return res.render('index', { 
+                shortUrl: null, 
+                error: '시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+                shortCode: null,
+                links: data.links,
+                pagination: data.pagination
+            });
+        }
     } while (urlDatabase.has(shortCode));
 
-    urlDatabase.set(shortCode, {
+    // 새 링크 데이터 생성
+    const newLinkData = {
         originalUrl: url,
         clicks: 0,
         createdAt: new Date(),
         userId: userId
-    });
+    };
+
+    // 메모리에 저장
+    urlDatabase.set(shortCode, newLinkData);
 
     const userLinkList = userLinks.get(userId) || [];
     userLinkList.push(shortCode);
     userLinks.set(userId, userLinkList);
 
-    // 데이터 저장 - 즉시 저장으로 변경
-    const saveResult = saveData();
-    if (!saveResult) {
-        console.error('새 링크 저장 실패 - 재시도 중...');
-        setTimeout(() => saveData(), 100);
+    // 데이터 저장 - 여러 번 시도하여 확실히 저장
+    let saveAttempts = 0;
+    const maxSaveAttempts = 5;
+    let saveSuccess = false;
+    
+    while (saveAttempts < maxSaveAttempts && !saveSuccess) {
+        saveAttempts++;
+        saveSuccess = saveData();
+        if (!saveSuccess) {
+            console.error(`새 링크 저장 실패 (시도 ${saveAttempts}/${maxSaveAttempts})`);
+            if (saveAttempts < maxSaveAttempts) {
+                // 잠시 대기 후 재시도
+                await new Promise(resolve => setTimeout(resolve, 100 * saveAttempts));
+            }
+        } else {
+            console.log(`새 링크 저장 성공: ${shortCode} -> ${url}`);
+        }
+    }
+    
+    if (!saveSuccess) {
+        console.error('링크 저장 최종 실패 - 메모리에만 존재');
+        // 메모리에서 제거하여 일관성 유지
+        urlDatabase.delete(shortCode);
+        const userList = userLinks.get(userId);
+        if (userList) {
+            const index = userList.indexOf(shortCode);
+            if (index > -1) {
+                userList.splice(index, 1);
+            }
+        }
+        
+        const data = getAllLinksWithPagination(1);
+        return res.render('index', { 
+            shortUrl: null, 
+            error: '링크 저장에 실패했습니다. 다시 시도해주세요.',
+            shortCode: null,
+            links: data.links,
+            pagination: data.pagination
+        });
     }
 
     const shortUrl = `https://wpst.shop/${shortCode}`;
