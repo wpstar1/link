@@ -11,56 +11,99 @@ const userLinks = new Map();
 // 데이터 파일 경로
 const DATA_FILE = path.join(__dirname, 'data.json');
 
-// 데이터 저장 함수
+// 데이터 저장 함수 - 강화된 버전
 function saveData() {
     const data = {
         urlDatabase: Object.fromEntries(urlDatabase),
-        userLinks: Object.fromEntries(userLinks)
+        userLinks: Object.fromEntries(userLinks),
+        lastSaved: new Date().toISOString()
     };
-    try {
-        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-        console.log('데이터 저장 완료:', DATA_FILE);
-    } catch (error) {
-        console.error('데이터 저장 실패:', error);
-        // 디렉토리가 없으면 생성
+    
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
         try {
-            const dir = path.dirname(DATA_FILE);
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
+            // 임시 파일에 먼저 저장
+            const tempFile = DATA_FILE + '.tmp';
+            fs.writeFileSync(tempFile, JSON.stringify(data, null, 2));
+            
+            // 기존 파일을 백업
+            if (fs.existsSync(DATA_FILE)) {
+                fs.copyFileSync(DATA_FILE, DATA_FILE + '.bak');
             }
-            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-            console.log('디렉토리 생성 후 데이터 저장 완료');
-        } catch (retryError) {
-            console.error('재시도 저장도 실패:', retryError);
+            
+            // 임시 파일을 실제 파일로 이동
+            fs.renameSync(tempFile, DATA_FILE);
+            
+            console.log(`데이터 저장 완료 (${new Date().toLocaleString()}):`, DATA_FILE);
+            return true;
+        } catch (error) {
+            attempts++;
+            console.error(`데이터 저장 실패 (시도 ${attempts}/${maxAttempts}):`, error);
+            
+            if (attempts < maxAttempts) {
+                // 재시도 전에 잠시 대기
+                const delay = attempts * 100;
+                setTimeout(() => {}, delay);
+            } else {
+                // 최종 실패 시 디렉토리 생성 재시도
+                try {
+                    const dir = path.dirname(DATA_FILE);
+                    if (!fs.existsSync(dir)) {
+                        fs.mkdirSync(dir, { recursive: true });
+                    }
+                    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+                    console.log('디렉토리 생성 후 데이터 저장 완료');
+                    return true;
+                } catch (retryError) {
+                    console.error('모든 저장 시도 실패:', retryError);
+                    return false;
+                }
+            }
         }
     }
+    return false;
 }
 
-// 데이터 로드 함수
+// 데이터 로드 함수 - 백업 파일 복구 기능 포함
 function loadData() {
-    try {
-        if (fs.existsSync(DATA_FILE)) {
-            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-            
-            // urlDatabase 복원
-            if (data.urlDatabase) {
+    const files = [DATA_FILE, DATA_FILE + '.bak'];
+    
+    for (const file of files) {
+        try {
+            if (fs.existsSync(file)) {
+                const rawData = fs.readFileSync(file, 'utf8');
+                const data = JSON.parse(rawData);
+                
+                // 데이터 무결성 검사
+                if (!data.urlDatabase || !data.userLinks) {
+                    console.warn(`${file}: 데이터 구조가 올바르지 않음`);
+                    continue;
+                }
+                
+                // urlDatabase 복원
+                urlDatabase.clear();
                 for (const [key, value] of Object.entries(data.urlDatabase)) {
                     urlDatabase.set(key, value);
                 }
-            }
-            
-            // userLinks 복원
-            if (data.userLinks) {
+                
+                // userLinks 복원
+                userLinks.clear();
                 for (const [key, value] of Object.entries(data.userLinks)) {
                     userLinks.set(key, value);
                 }
+                
+                console.log(`데이터 로드 완료 (${file}): ${urlDatabase.size}개 링크`);
+                return true;
             }
-            
-            console.log('저장된 데이터 로드 완료');
+        } catch (error) {
+            console.error(`${file} 로드 실패:`, error);
         }
-    } catch (error) {
-        console.error('데이터 로드 실패:', error);
     }
+    
+    console.log('로드할 유효한 데이터 파일이 없음');
+    return false;
 }
 
 // 테스트용 샘플 데이터 (개발/데모용)
@@ -104,11 +147,33 @@ if (urlDatabase.size === 0) {
     console.log(`${urlDatabase.size}개의 링크 데이터가 로드되었습니다.`);
 }
 
-// 주기적으로 데이터 백업 (5분마다)
+// 주기적으로 데이터 백업 (1분마다)
 setInterval(() => {
+    if (urlDatabase.size > 0) {
+        saveData();
+        console.log('주기적 데이터 백업 완료');
+    }
+}, 60 * 1000);
+
+// 프로세스 종료 시 데이터 저장
+process.on('SIGINT', () => {
+    console.log('\n서버 종료 중... 데이터 저장');
     saveData();
-    console.log('주기적 데이터 백업 완료');
-}, 5 * 60 * 1000);
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('서버 종료 신호 받음... 데이터 저장');
+    saveData();
+    process.exit(0);
+});
+
+// 예상치 못한 오류 시에도 데이터 저장
+process.on('uncaughtException', (error) => {
+    console.error('예상치 못한 오류:', error);
+    saveData();
+    process.exit(1);
+});
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -284,8 +349,12 @@ app.post('/shorten', (req, res) => {
     userLinkList.push(shortCode);
     userLinks.set(userId, userLinkList);
 
-    // 데이터 저장
-    saveData();
+    // 데이터 저장 - 즉시 저장으로 변경
+    const saveResult = saveData();
+    if (!saveResult) {
+        console.error('새 링크 저장 실패 - 재시도 중...');
+        setTimeout(() => saveData(), 100);
+    }
 
     const shortUrl = `https://wpst.shop/${shortCode}`;
     
@@ -312,7 +381,13 @@ app.get('/:code', (req, res) => {
     }
 
     urlData.clicks += 1;
-    saveData(); // 클릭수 업데이트 저장
+    // 클릭수 업데이트 저장 - 비동기로 처리하여 리다이렉트 속도 향상
+    setImmediate(() => {
+        const saveResult = saveData();
+        if (!saveResult) {
+            console.error('클릭수 업데이트 저장 실패');
+        }
+    });
     res.redirect(urlData.originalUrl);
 });
 
