@@ -19,8 +19,20 @@ function saveData() {
     };
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        console.log('데이터 저장 완료:', DATA_FILE);
     } catch (error) {
         console.error('데이터 저장 실패:', error);
+        // 디렉토리가 없으면 생성
+        try {
+            const dir = path.dirname(DATA_FILE);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+            console.log('디렉토리 생성 후 데이터 저장 완료');
+        } catch (retryError) {
+            console.error('재시도 저장도 실패:', retryError);
+        }
     }
 }
 
@@ -85,9 +97,18 @@ function initSampleData() {
 // 서버 시작 시 데이터 로드 후 샘플 데이터 초기화 (데이터가 없을 때만)
 loadData();
 if (urlDatabase.size === 0) {
+    console.log('데이터베이스가 비어있어 샘플 데이터를 초기화합니다.');
     initSampleData();
     saveData(); // 샘플 데이터 저장
+} else {
+    console.log(`${urlDatabase.size}개의 링크 데이터가 로드되었습니다.`);
 }
+
+// 주기적으로 데이터 백업 (5분마다)
+setInterval(() => {
+    saveData();
+    console.log('주기적 데이터 백업 완료');
+}, 5 * 60 * 1000);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
