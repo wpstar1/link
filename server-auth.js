@@ -316,6 +316,59 @@ app.post('/signup', async (req, res) => {
     }
 });
 
+// 구글 로그인 라우트
+app.get('/auth/google', async (req, res) => {
+    try {
+        const redirectUrl = `${process.env.SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent('https://wpst.shop/auth/google/callback')}`;
+        res.redirect(redirectUrl);
+    } catch (error) {
+        console.error('구글 로그인 리디렉트 오류:', error);
+        res.redirect('/login?error=google_auth_failed');
+    }
+});
+
+// 구글 로그인 콜백
+app.get('/auth/google/callback', async (req, res) => {
+    try {
+        const { access_token, refresh_token } = req.query;
+        
+        if (!access_token) {
+            throw new Error('Access token not found');
+        }
+        
+        // Supabase를 통해 사용자 정보 가져오기
+        const { data: { user }, error } = await supabase.auth.getUser(access_token);
+        
+        if (error || !user) {
+            throw error || new Error('User not found');
+        }
+        
+        // 세션에 사용자 정보 저장
+        req.session.userId = user.id;
+        req.session.userEmail = user.email;
+        
+        // users 테이블에 사용자 정보 저장/업데이트
+        await supabase
+            .from('users')
+            .upsert([{ 
+                id: user.id,
+                email: user.email 
+            }], { onConflict: 'id' });
+        
+        // 세션 저장 후 리디렉션
+        req.session.save((err) => {
+            if (err) {
+                console.error('구글 로그인 세션 저장 오류:', err);
+                return res.redirect('/login?error=session_save_failed');
+            }
+            res.redirect('/');
+        });
+    } catch (error) {
+        console.error('구글 로그인 콜백 오류:', error);
+        res.redirect('/login?error=google_callback_failed');
+    }
+});
+
 // 로그아웃
 app.get('/logout', (req, res) => {
     req.session.destroy();
