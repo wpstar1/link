@@ -430,6 +430,8 @@ app.post('/shorten', async (req, res) => {
     }
 
     try {
+        console.log('URL 단축 요청:', { url, userId });
+        
         // 중복 URL 확인
         const { data: existingUrl, error: checkError } = await supabase
             .from('urls')
@@ -437,15 +439,14 @@ app.post('/shorten', async (req, res) => {
             .eq('original_url', url)
             .single();
         
+        console.log('중복 확인 결과:', { existingUrl, checkError: checkError?.message });
+        
         if (existingUrl && !checkError) {
             const existingShortUrl = `https://wpst.shop/${existingUrl.short_code}`;
-            const data = await getAllLinksWithPagination(1);
             return res.render('index', { 
                 shortUrl: existingShortUrl, 
                 error: null,
-                shortCode: existingUrl.short_code,
-                links: data.links,
-                pagination: data.pagination
+                shortCode: existingUrl.short_code
             });
         }
 
@@ -472,13 +473,10 @@ app.post('/shorten', async (req, res) => {
         }
         
         if (attempts >= maxAttempts) {
-            const data = await getAllLinksWithPagination(1);
             return res.render('index', { 
                 shortUrl: null, 
                 error: '시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-                shortCode: null,
-                links: data.links,
-                pagination: data.pagination
+                shortCode: null
             });
         }
 
