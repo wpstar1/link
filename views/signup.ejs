@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - WPST Shop</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .auth-btn {
+            background: #2ecc71;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .auth-btn:hover {
+            background: #27ae60;
+        }
+        .auth-links {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .auth-links a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        .success-message {
+            background: #efe;
+            color: #3a3;
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 WPST Shop</h1>
+            <p>회원가입하고 링크를 관리하세요</p>
+        </header>
+
+        <div class="auth-container">
+            <h2>회원가입</h2>
+            
+            <% if (locals.error) { %>
+                <div class="error-message">
+                    <%= error %>
+                </div>
+            <% } %>
+            
+            <% if (locals.success) { %>
+                <div class="success-message">
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <form action="/signup" method="POST" class="auth-form">
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required 
+                        placeholder="example@email.com"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        placeholder="비밀번호 (6자 이상)"
+                        minlength="6"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">비밀번호 확인</label>
+                    <input 
+                        type="password" 
+                        id="confirmPassword" 
+                        name="confirmPassword" 
+                        required 
+                        placeholder="비밀번호를 다시 입력하세요"
+                        minlength="6"
+                    >
+                </div>
+                
+                <button type="submit" class="auth-btn">회원가입</button>
+            </form>
+            
+            <div class="auth-links">
+                <p>이미 계정이 있으신가요? <a href="/login">로그인</a></p>
+                <p><a href="/">홈으로 돌아가기</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

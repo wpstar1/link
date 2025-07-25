@@ -64,6 +64,16 @@
         <header>
             <h1>🔗 WPST Shop</h1>
             <p>긴 URL을 짧고 간편하게! 무료 링크 단축 서비스</p>
+            <div class="auth-buttons" style="margin-top: 1rem;">
+                <% if (locals.user) { %>
+                    <span style="margin-right: 1rem;">👋 <%= user.email %></span>
+                    <a href="/my-links" class="btn" style="margin-right: 0.5rem;">내 링크</a>
+                    <a href="/logout" class="btn btn-secondary">로그아웃</a>
+                <% } else { %>
+                    <a href="/login" class="btn" style="margin-right: 0.5rem;">로그인</a>
+                    <a href="/signup" class="btn btn-primary">회원가입</a>
+                <% } %>
+            </div>
         </header>
 
         <main>
