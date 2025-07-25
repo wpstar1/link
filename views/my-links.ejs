@@ -92,7 +92,7 @@
         
         .link-row {
             display: grid;
-            grid-template-columns: auto 1fr auto auto auto;
+            grid-template-columns: auto 1fr auto auto;
             align-items: center;
             padding: 1.5rem;
             border-bottom: 1px solid #e9ecef;
@@ -197,12 +197,6 @@
             
             .link-date {
                 display: none;
-            }
-            
-            .link-actions {
-                grid-column: 1 / -1;
-                justify-content: flex-end;
-                margin-top: 0.5rem;
             }
         }
         
@@ -352,14 +346,6 @@
                                     }) %>
                                 </div>
                                 
-                                <div class="link-actions">
-                                    <button onclick="copyUrl('<%= link.shortUrl %>')" class="action-btn copy-btn">
-                                        📋 복사
-                                    </button>
-                                    <a href="<%= link.shortUrl %>" target="_blank" class="action-btn visit-btn">
-                                        🚀 방문
-                                    </a>
-                                </div>
                             </div>
                         <% }); %>
                     </div>
@@ -409,40 +395,6 @@
     </div>
 
     <script>
-        function copyUrl(url) {
-            navigator.clipboard.writeText(url).then(function() {
-                const btn = event.target;
-                const originalText = btn.textContent;
-                btn.textContent = '✅ 복사됨!';
-                btn.style.background = '#27ae60';
-                btn.style.color = 'white';
-                
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.style.background = '';
-                    btn.style.color = '';
-                }, 2000);
-            }).catch(function() {
-                const input = document.createElement('input');
-                input.value = url;
-                document.body.appendChild(input);
-                input.select();
-                document.execCommand('copy');
-                document.body.removeChild(input);
-                
-                const btn = event.target;
-                const originalText = btn.textContent;
-                btn.textContent = '✅ 복사됨!';
-                btn.style.background = '#27ae60';
-                btn.style.color = 'white';
-                
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.style.background = '';
-                    btn.style.color = '';
-                }, 2000);
-            });
-        }
         
         function filterLinks() {
             const searchInput = document.getElementById('searchInput');
