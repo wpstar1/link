@@ -15,6 +15,17 @@ console.log('==============================');
 const supabase = require('./lib/supabase');
 const app = express();
 
+// CORS 헤더 설정
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 // 세션 설정
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
@@ -198,13 +209,12 @@ app.post('/signup', async (req, res) => {
             url: process.env.SUPABASE_URL ? 'Set' : 'Not set',
             key: process.env.SUPABASE_ANON_KEY ? 'Set' : 'Not set'
         });
+        console.log('Supabase URL 값:', process.env.SUPABASE_URL);
         
+        // 더 간단한 signUp 호출
         const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: `${req.protocol}://${req.get('host')}/login`
-            }
+            email: email.trim(),
+            password: password
         });
         
         if (error) {
