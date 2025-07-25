@@ -20,7 +20,7 @@ function saveData() {
     };
     
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 5; // 시도 횟수 증가
     
     while (attempts < maxAttempts) {
         try {
@@ -30,8 +30,24 @@ function saveData() {
                 fs.mkdirSync(dir, { recursive: true });
             }
             
-            // 직접 파일에 저장 (Windows에서 rename이 문제가 될 수 있음)
-            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), { encoding: 'utf8', flag: 'w' });
+            // 임시 파일에 먼저 저장
+            const tempFile = DATA_FILE + '.tmp';
+            fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), { encoding: 'utf8', flag: 'w' });
+            
+            // 백업 파일 생성
+            if (fs.existsSync(DATA_FILE)) {
+                try {
+                    fs.copyFileSync(DATA_FILE, DATA_FILE + '.bak');
+                } catch (backupError) {
+                    console.warn('백업 파일 생성 실패:', backupError.message);
+                }
+            }
+            
+            // 임시 파일을 원본으로 이동 (Windows에서 더 안전)
+            if (fs.existsSync(DATA_FILE)) {
+                fs.unlinkSync(DATA_FILE);
+            }
+            fs.renameSync(tempFile, DATA_FILE);
             
             console.log(`데이터 저장 완료 (${new Date().toLocaleString()}):`, DATA_FILE);
             return true;
@@ -41,8 +57,8 @@ function saveData() {
             console.error('에러 상세:', error.message, error.code);
             
             if (attempts < maxAttempts) {
-                // 재시도 전에 잠시 대기 (동기적으로)
-                const delay = attempts * 100;
+                // 재시도 전에 잠시 대기
+                const delay = attempts * 200; // 대기 시간 증가
                 const start = Date.now();
                 while (Date.now() - start < delay) {
                     // 대기
@@ -51,19 +67,22 @@ function saveData() {
         }
     }
     
-    // 모든 시도 실패 시 백업 방법 시도
+    // 모든 시도 실패 시 비상 저장
     try {
-        const backupFile = DATA_FILE + '.emergency';
-        fs.writeFileSync(backupFile, JSON.stringify(data, null, 2), { encoding: 'utf8', flag: 'w' });
-        console.log('비상 백업 파일에 저장:', backupFile);
+        const emergencyFile = DATA_FILE + '.emergency';
+        fs.writeFileSync(emergencyFile, JSON.stringify(data, null, 2), { encoding: 'utf8', flag: 'w' });
+        console.log('비상 백업 파일에 저장:', emergencyFile);
         
-        // 백업 파일을 원본으로 복사 시도
+        // 비상 파일을 원본으로 복사 시도
         try {
-            fs.copyFileSync(backupFile, DATA_FILE);
-            console.log('백업 파일을 원본으로 복사 성공');
+            if (fs.existsSync(DATA_FILE)) {
+                fs.unlinkSync(DATA_FILE);
+            }
+            fs.copyFileSync(emergencyFile, DATA_FILE);
+            console.log('비상 백업 파일을 원본으로 복사 성공');
             return true;
         } catch (copyError) {
-            console.error('백업 파일 복사 실패:', copyError);
+            console.error('비상 백업 파일 복사 실패:', copyError);
         }
     } catch (emergencyError) {
         console.error('비상 백업도 실패:', emergencyError);
