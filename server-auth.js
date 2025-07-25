@@ -319,7 +319,9 @@ app.post('/signup', async (req, res) => {
 // 구글 로그인 라우트
 app.get('/auth/google', async (req, res) => {
     try {
-        const redirectUrl = `${process.env.SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent('https://wpst.shop/auth/google/callback')}`;
+        // Supabase가 처리 후 우리 사이트로 돌아올 URL
+        const siteRedirectUrl = 'https://wpst.shop/auth/callback';
+        const redirectUrl = `${process.env.SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(siteRedirectUrl)}`;
         res.redirect(redirectUrl);
     } catch (error) {
         console.error('구글 로그인 리디렉트 오류:', error);
@@ -327,8 +329,8 @@ app.get('/auth/google', async (req, res) => {
     }
 });
 
-// 구글 로그인 콜백
-app.get('/auth/google/callback', async (req, res) => {
+// Supabase OAuth 콜백 처리
+app.get('/auth/callback', async (req, res) => {
     try {
         const { access_token, refresh_token } = req.query;
         
