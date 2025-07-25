@@ -144,6 +144,45 @@ app.get('/', async (req, res) => {
     }
 });
 
+// Supabase 연결 테스트 엔드포인트
+app.get('/test-supabase', async (req, res) => {
+    try {
+        console.log('=== Supabase 연결 테스트 ===');
+        console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
+        console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Set' : 'Not set');
+        
+        // 간단한 쿼리 테스트
+        const { data, error } = await supabase
+            .from('urls')
+            .select('count')
+            .limit(1);
+        
+        if (error) {
+            console.error('Supabase 쿼리 에러:', error);
+            return res.json({
+                status: 'error',
+                message: 'Supabase 쿼리 실패',
+                error: error.message,
+                url: process.env.SUPABASE_URL
+            });
+        }
+        
+        res.json({
+            status: 'success',
+            message: 'Supabase 연결 성공',
+            url: process.env.SUPABASE_URL,
+            data: data
+        });
+    } catch (error) {
+        console.error('테스트 에러:', error);
+        res.json({
+            status: 'error',
+            message: '연결 테스트 실패',
+            error: error.message
+        });
+    }
+});
+
 // 로그인 페이지
 app.get('/login', (req, res) => {
     if (req.session.userId) {
@@ -205,15 +244,10 @@ app.post('/signup', async (req, res) => {
     
     try {
         console.log('회원가입 시도:', email);
-        console.log('Supabase 환경변수 확인:', {
-            url: process.env.SUPABASE_URL ? 'Set' : 'Not set',
-            key: process.env.SUPABASE_ANON_KEY ? 'Set' : 'Not set'
-        });
-        console.log('Supabase URL 값:', process.env.SUPABASE_URL);
         
-        // 더 간단한 signUp 호출
+        // 아주 기본적인 signUp 호출
         const { data, error } = await supabase.auth.signUp({
-            email: email.trim(),
+            email: email,
             password: password
         });
         
