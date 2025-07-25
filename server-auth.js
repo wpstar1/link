@@ -320,7 +320,7 @@ app.post('/signup', async (req, res) => {
 app.get('/auth/google', async (req, res) => {
     try {
         // Supabase가 처리 후 우리 사이트로 돌아올 URL
-        const siteRedirectUrl = 'https://wpst.shop/auth/callback';
+        const siteRedirectUrl = 'https://wpst.shop/auth/google/callback';
         const redirectUrl = `${process.env.SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(siteRedirectUrl)}`;
         res.redirect(redirectUrl);
     } catch (error) {
@@ -330,7 +330,7 @@ app.get('/auth/google', async (req, res) => {
 });
 
 // Supabase OAuth 콜백 처리
-app.get('/auth/callback', async (req, res) => {
+app.get('/auth/google/callback', async (req, res) => {
     try {
         const { access_token, refresh_token } = req.query;
         
