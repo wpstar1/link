@@ -138,6 +138,34 @@ app.get('/test-table-permissions', async (req, res) => {
     }
 });
 
+// 디버그: 모든 링크 조회
+app.get('/debug-all-links', async (req, res) => {
+    try {
+        const { data: allLinks, error } = await supabase
+            .from('urls')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20);
+        
+        if (error) {
+            return res.json({ error: error.message });
+        }
+        
+        res.json({
+            totalLinks: allLinks.length,
+            currentUserId: req.session.userId || 'Not logged in',
+            links: allLinks.map(link => ({
+                shortCode: link.short_code,
+                userId: link.user_id,
+                createdAt: link.created_at,
+                isCurrentUser: link.user_id === req.session.userId
+            }))
+        });
+    } catch (error) {
+        res.json({ error: error.message });
+    }
+});
+
 // Supabase 연결 테스트 엔드포인트
 app.get('/test-supabase', async (req, res) => {
     try {
@@ -534,13 +562,20 @@ app.post('/shorten', async (req, res) => {
 // 내 링크 페이지 (로그인 필요)
 app.get('/my-links', isAuthenticated, async (req, res) => {
     try {
+        console.log('내 링크 조회 - 사용자 ID:', req.session.userId);
+        
         const { data: links, error } = await supabase
             .from('urls')
             .select('*')
             .eq('user_id', req.session.userId)
             .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase 쿼리 오류:', error);
+            throw error;
+        }
+        
+        console.log('조회된 링크 수:', links?.length || 0);
         
         const formattedLinks = links.map(link => ({
             shortCode: link.short_code,
