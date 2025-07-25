@@ -38,10 +38,12 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 365 * 24 * 60 * 60 * 1000, // 1년
-        sameSite: 'lax',
-        domain: process.env.NODE_ENV === 'production' ? '.wpst.shop' : undefined
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // production에서는 none으로 설정
+        domain: process.env.NODE_ENV === 'production' ? '.wpst.shop' : undefined,
+        path: '/' // 명시적으로 경로 설정
     },
-    name: 'wpst.sid' // 세션 쿠키 이름 지정
+    name: 'wpst.sid', // 세션 쿠키 이름 지정
+    rolling: true // 활동할 때마다 세션 갱신
 }));
 
 app.use(express.urlencoded({ extended: true }));
@@ -54,6 +56,8 @@ app.set('views', path.join(__dirname, 'views'));
 // 인증 미들웨어
 function isAuthenticated(req, res, next) {
     if (req.session.userId) {
+        // 세션 갱신
+        req.session.touch();
         next();
     } else {
         res.redirect('/login');
@@ -414,6 +418,8 @@ app.get('/auth/process', async (req, res) => {
         // 세션에 사용자 정보 저장
         req.session.userId = user.id;
         req.session.userEmail = user.email;
+        req.session.loginMethod = 'google';
+        req.session.accessToken = access_token; // 토큰도 저장
         
         // users 테이블에 사용자 정보 저장/업데이트
         await supabase
