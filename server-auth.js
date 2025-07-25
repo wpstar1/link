@@ -3,6 +3,15 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const crypto = require('crypto');
+
+// 환경변수 확인
+console.log('=== 서버 시작 환경변수 확인 ===');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Configured' : 'Not configured');
+console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Configured' : 'Not configured');
+console.log('SESSION_SECRET:', process.env.SESSION_SECRET ? 'Configured' : 'Using default');
+console.log('==============================');
+
 const supabase = require('./lib/supabase');
 const app = express();
 
@@ -184,26 +193,40 @@ app.post('/signup', async (req, res) => {
     }
     
     try {
+        console.log('회원가입 시도:', email);
+        console.log('Supabase 환경변수 확인:', {
+            url: process.env.SUPABASE_URL ? 'Set' : 'Not set',
+            key: process.env.SUPABASE_ANON_KEY ? 'Set' : 'Not set'
+        });
+        
         const { data, error } = await supabase.auth.signUp({
             email,
-            password
+            password,
+            options: {
+                emailRedirectTo: `${req.protocol}://${req.get('host')}/login`
+            }
         });
         
         if (error) {
+            console.error('Supabase signUp error:', error);
             return res.render('signup', { 
-                error: error.message, 
+                error: `회원가입 실패: ${error.message}`, 
                 success: null 
             });
         }
         
         // users 테이블에도 사용자 정보 저장
         if (data.user) {
-            await supabase
+            const { error: insertError } = await supabase
                 .from('users')
                 .insert([{ 
                     id: data.user.id,
                     email: data.user.email 
                 }]);
+            
+            if (insertError) {
+                console.error('Users table insert error:', insertError);
+            }
         }
         
         res.render('signup', { 
@@ -211,9 +234,10 @@ app.post('/signup', async (req, res) => {
             success: '회원가입이 완료되었습니다. 이메일을 확인해주세요.' 
         });
     } catch (error) {
-        console.error('회원가입 오류:', error);
+        console.error('회원가입 전체 오류:', error);
+        console.error('Error stack:', error.stack);
         res.render('signup', { 
-            error: '회원가입 중 오류가 발생했습니다.', 
+            error: `회원가입 중 오류가 발생했습니다: ${error.message}`, 
             success: null 
         });
     }
