@@ -26,6 +26,9 @@ app.use((req, res, next) => {
     next();
 });
 
+// 프록시 신뢰 설정 (Vercel 환경)
+app.set('trust proxy', 1);
+
 // 세션 설정
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
@@ -34,7 +37,8 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24시간
+        maxAge: 24 * 60 * 60 * 1000, // 24시간
+        sameSite: 'lax'
     }
 }));
 
@@ -217,7 +221,15 @@ app.post('/login', async (req, res) => {
         req.session.userId = data.user.id;
         req.session.userEmail = data.user.email;
         
-        res.redirect('/');
+        // 세션 저장 후 리디렉션
+        req.session.save((err) => {
+            if (err) {
+                console.error('세션 저장 오류:', err);
+                return res.render('login', { error: '로그인 처리 중 오류가 발생했습니다.' });
+            }
+            console.log('로그인 성공, 세션 저장됨:', req.session.userId);
+            res.redirect('/');
+        });
     } catch (error) {
         console.error('로그인 오류:', error);
         res.render('login', { error: '로그인 중 오류가 발생했습니다.' });
@@ -276,7 +288,18 @@ app.post('/signup', async (req, res) => {
             req.session.userId = data.user.id;
             req.session.userEmail = data.user.email;
             
-            return res.redirect('/');
+            // 세션 저장 후 리디렉션
+            return req.session.save((err) => {
+                if (err) {
+                    console.error('회원가입 세션 저장 오류:', err);
+                    return res.render('signup', { 
+                        error: '회원가입은 성공했지만 자동 로그인에 실패했습니다. 로그인 페이지에서 로그인해주세요.', 
+                        success: null 
+                    });
+                }
+                console.log('회원가입 후 자동 로그인 성공:', req.session.userId);
+                res.redirect('/');
+            });
         }
         
         res.render('signup', { 
