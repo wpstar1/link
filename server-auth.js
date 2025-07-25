@@ -332,6 +332,45 @@ app.get('/auth/google', async (req, res) => {
 // Supabase OAuth 콜백 처리
 app.get('/auth/google/callback', async (req, res) => {
     try {
+        console.log('구글 로그인 콜백 파라미터:', req.query);
+        
+        // Supabase는 hash fragment로 토큰을 전달하므로 클라이언트 사이드에서 처리해야 함
+        // 임시 HTML 페이지를 보내서 토큰을 추출하고 서버로 전송
+        res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>로그인 처리 중...</title>
+            </head>
+            <body>
+                <p>로그인 처리 중입니다...</p>
+                <script>
+                    // URL의 hash fragment에서 토큰 추출
+                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                    const accessToken = hashParams.get('access_token');
+                    const refreshToken = hashParams.get('refresh_token');
+                    
+                    if (accessToken) {
+                        // 토큰을 서버로 전송
+                        window.location.href = '/auth/process?access_token=' + accessToken + '&refresh_token=' + (refreshToken || '');
+                    } else {
+                        // 에러 처리
+                        const error = hashParams.get('error_description') || 'Unknown error';
+                        window.location.href = '/login?error=' + encodeURIComponent(error);
+                    }
+                </script>
+            </body>
+            </html>
+        `);
+    } catch (error) {
+        console.error('구글 로그인 콜백 오류:', error);
+        res.redirect('/login?error=google_callback_failed');
+    }
+});
+
+// 실제 토큰 처리
+app.get('/auth/process', async (req, res) => {
+    try {
         const { access_token, refresh_token } = req.query;
         
         if (!access_token) {
@@ -342,6 +381,7 @@ app.get('/auth/google/callback', async (req, res) => {
         const { data: { user }, error } = await supabase.auth.getUser(access_token);
         
         if (error || !user) {
+            console.error('사용자 정보 가져오기 실패:', error);
             throw error || new Error('User not found');
         }
         
@@ -363,11 +403,12 @@ app.get('/auth/google/callback', async (req, res) => {
                 console.error('구글 로그인 세션 저장 오류:', err);
                 return res.redirect('/login?error=session_save_failed');
             }
+            console.log('구글 로그인 성공:', user.email);
             res.redirect('/');
         });
     } catch (error) {
-        console.error('구글 로그인 콜백 오류:', error);
-        res.redirect('/login?error=google_callback_failed');
+        console.error('토큰 처리 오류:', error);
+        res.redirect('/login?error=token_processing_failed');
     }
 });
 
