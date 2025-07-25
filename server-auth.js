@@ -571,11 +571,26 @@ app.post('/shorten', async (req, res) => {
 app.get('/my-links', isAuthenticated, async (req, res) => {
     try {
         console.log('내 링크 조회 - 사용자 ID:', req.session.userId);
+        console.log('세션 전체 정보:', req.session);
         
+        // 먼저 모든 링크를 가져와서 user_id 형식 확인
+        const { data: allLinks, error: allError } = await supabase
+            .from('urls')
+            .select('*')
+            .limit(10);
+            
+        console.log('전체 링크 샘플:', allLinks?.map(l => ({ 
+            shortCode: l.short_code, 
+            userId: l.user_id,
+            userIdType: typeof l.user_id
+        })));
+        
+        // 사용자의 링크 조회 (user_id가 null인 것들도 포함하여 임시로 모두 표시)
+        // 나중에 user_id가 제대로 저장되면 이 부분을 다시 수정해야 함
         const { data: links, error } = await supabase
             .from('urls')
             .select('*')
-            .eq('user_id', req.session.userId)
+            .or(`user_id.eq.${req.session.userId},user_id.is.null`)
             .order('created_at', { ascending: false });
         
         if (error) {
@@ -584,6 +599,7 @@ app.get('/my-links', isAuthenticated, async (req, res) => {
         }
         
         console.log('조회된 링크 수:', links?.length || 0);
+        console.log('첫 번째 링크:', links?.[0]);
         
         const formattedLinks = links.map(link => ({
             shortCode: link.short_code,
