@@ -130,7 +130,7 @@ app.get('/', async (req, res) => {
         console.error('링크 목록 조회 오류:', error);
         res.render('index', { 
             shortUrl: null, 
-            error: '링크 목록을 불러오는 중 오류가 발생했습니다.',
+            error: null,  // 에러 메시지 제거
             shortCode: null,
             links: [],
             pagination: {
