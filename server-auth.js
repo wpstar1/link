@@ -271,6 +271,12 @@ app.post('/signup', async (req, res) => {
             if (insertError) {
                 console.error('Users table insert error:', insertError);
             }
+            
+            // 회원가입 성공 시 자동 로그인 및 메인 페이지로 리디렉션
+            req.session.userId = data.user.id;
+            req.session.userEmail = data.user.email;
+            
+            return res.redirect('/');
         }
         
         res.render('signup', { 
