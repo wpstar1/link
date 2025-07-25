@@ -11,80 +11,399 @@
     <link rel="canonical" href="https://wpst.shop/my-links">
     
     <link rel="stylesheet" href="/style.css">
+    <style>
+        /* 전문적인 대시보드 스타일 */
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .links-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        
+        .table-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            max-width: 300px;
+        }
+        
+        .search-box input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .link-row {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            transition: background 0.2s;
+            gap: 1rem;
+        }
+        
+        .link-row:hover {
+            background: #f8f9fa;
+        }
+        
+        .link-icon {
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+        
+        .link-details {
+            flex: 1;
+        }
+        
+        .short-url {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+            font-size: 1.1rem;
+        }
+        
+        .original-url {
+            color: #666;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        
+        .click-count {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .link-date {
+            color: #999;
+            font-size: 0.85rem;
+        }
+        
+        .link-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .copy-btn {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .copy-btn:hover {
+            background: #dee2e6;
+        }
+        
+        .visit-btn {
+            background: #667eea;
+            color: white;
+        }
+        
+        .visit-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 1024px) {
+            .link-row {
+                grid-template-columns: auto 1fr auto;
+                gap: 0.75rem;
+            }
+            
+            .link-date {
+                display: none;
+            }
+            
+            .link-actions {
+                grid-column: 1 / -1;
+                justify-content: flex-end;
+                margin-top: 0.5rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 1.5rem;
+            }
+            
+            .stat-value {
+                font-size: 2rem;
+            }
+            
+            .link-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                padding: 1rem;
+            }
+            
+            .link-icon {
+                display: none;
+            }
+            
+            .click-count {
+                margin-top: 0.5rem;
+                display: inline-block;
+            }
+            
+            .search-box {
+                max-width: 100%;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+        
+        .performance-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .badge-excellent {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
+        .badge-good {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .badge-average {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📋 내 링크들</h1>
-            <p>내가 만든 단축 URL들을 관리하세요</p>
-            <div class="nav-buttons">
-                <a href="/" class="nav-btn">🔗 새 링크 만들기</a>
+        <header class="dashboard-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 style="margin: 0; font-size: 2rem;">📊 대시보드</h1>
+                    <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">링크 성과를 한눈에 확인하세요</p>
+                </div>
+                <div>
+                    <a href="/" class="action-btn" style="background: white; color: #667eea;">
+                        ➕ 새 링크 만들기
+                    </a>
+                </div>
             </div>
         </header>
 
         <main>
-            <% if (links.length === 0) { %>
-                <div class="empty-state">
-                    <div class="empty-icon">🔗</div>
-                    <h3>아직 만든 링크가 없습니다</h3>
-                    <p>첫 번째 단축 URL을 만들어보세요!</p>
-                    <a href="/" class="create-link-btn">링크 만들기</a>
+            <% if (links.length > 0) { %>
+                <!-- 통계 카드 -->
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-value"><%= links.length %></div>
+                        <div class="stat-label">총 링크 수</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><%= links.reduce((sum, link) => sum + link.clicks, 0).toLocaleString() %></div>
+                        <div class="stat-label">총 클릭 수</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><%= links.length > 0 ? Math.round(links.reduce((sum, link) => sum + link.clicks, 0) / links.length) : 0 %></div>
+                        <div class="stat-label">평균 클릭</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><%= Math.max(...links.map(link => link.clicks)) %></div>
+                        <div class="stat-label">최고 클릭</div>
+                    </div>
                 </div>
-            <% } else { %>
-                <div class="links-grid">
-                    <% links.forEach(function(link) { %>
-                        <div class="link-card">
-                            <div class="link-header">
-                                <div class="link-info">
-                                    <h3>🔗 <%= link.shortCode %></h3>
-                                    <div class="link-stats">
-                                        <span class="visits">👆 <%= link.clicks %>명 방문</span>
-                                        <span class="date">📅 <%= new Date(link.createdAt).toLocaleDateString('ko-KR') %></span>
+
+                <!-- 링크 테이블 -->
+                <div class="links-table">
+                    <div class="table-header">
+                        <h2 style="margin: 0; font-size: 1.25rem;">🔗 내 링크 목록</h2>
+                        <div class="search-box">
+                            <span style="color: #999;">🔍</span>
+                            <input type="text" placeholder="링크 검색..." id="searchInput" onkeyup="filterLinks()">
+                        </div>
+                    </div>
+                    
+                    <div id="linksContainer">
+                        <% links.forEach(function(link) { 
+                            const performance = link.clicks > 100 ? 'excellent' : link.clicks > 50 ? 'good' : 'average';
+                            const performanceText = link.clicks > 100 ? '인기' : link.clicks > 50 ? '양호' : '보통';
+                        %>
+                            <div class="link-row" data-url="<%= link.shortUrl %> <%= link.originalUrl %>">
+                                <div class="link-icon">🔗</div>
+                                
+                                <div class="link-details">
+                                    <div class="short-url">
+                                        <%= link.shortUrl %>
+                                        <span class="performance-badge badge-<%= performance %>"><%= performanceText %></span>
                                     </div>
-                                </div>
-                            </div>
-                            
-                            <div class="link-content">
-                                <div class="url-section">
-                                    <div class="url-display">
-                                        <input type="text" value="<%= link.shortUrl %>" readonly class="url-input-readonly">
-                                        <button onclick="copyUrl('<%= link.shortUrl %>')" class="copy-btn-small">복사</button>
+                                    <div class="original-url" title="<%= link.originalUrl %>">
+                                        <%= link.originalUrl %>
                                     </div>
                                 </div>
                                 
-                                <div class="original-url">
-                                    <a href="<%= link.originalUrl %>" target="_blank" class="original-link">
-                                        → <%= link.originalUrl.length > 60 ? link.originalUrl.substring(0, 60) + '...' : link.originalUrl %>
+                                <div class="click-count">
+                                    👆 <%= link.clicks.toLocaleString() %> 클릭
+                                </div>
+                                
+                                <div class="link-date">
+                                    <%= new Date(link.createdAt).toLocaleDateString('ko-KR', { 
+                                        year: 'numeric', 
+                                        month: 'short', 
+                                        day: 'numeric' 
+                                    }) %>
+                                </div>
+                                
+                                <div class="link-actions">
+                                    <button onclick="copyUrl('<%= link.shortUrl %>')" class="action-btn copy-btn">
+                                        📋 복사
+                                    </button>
+                                    <a href="<%= link.shortUrl %>" target="_blank" class="action-btn visit-btn">
+                                        🚀 방문
                                     </a>
                                 </div>
                             </div>
-                            
-                            <div class="link-actions">
-                                <a href="<%= link.shortUrl %>" target="_blank" class="action-btn visit-btn">🚀 방문하기</a>
-                            </div>
-                        </div>
-                    <% }); %>
+                        <% }); %>
+                    </div>
                 </div>
                 
-                <div class="summary">
-                    <div class="summary-card">
-                        <h3>📈 요약</h3>
-                        <div class="summary-stats">
-                            <div class="stat">
-                                <span class="stat-number"><%= links.length %></span>
-                                <span class="stat-label">총 링크</span>
+                <!-- 성과 차트 (시각적 표현) -->
+                <div class="chart-container" style="margin-top: 2rem;">
+                    <h3>📈 상위 5개 링크 성과</h3>
+                    <div style="margin-top: 1.5rem;">
+                        <% 
+                        const topLinks = [...links]
+                            .sort((a, b) => b.clicks - a.clicks)
+                            .slice(0, 5);
+                        const maxClicks = Math.max(...topLinks.map(l => l.clicks));
+                        
+                        topLinks.forEach(function(link, index) { 
+                            const percentage = maxClicks > 0 ? (link.clicks / maxClicks * 100) : 0;
+                        %>
+                            <div style="margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span style="font-weight: 600;">#<%= index + 1 %> <%= link.shortCode %></span>
+                                    <span style="color: #667eea; font-weight: 600;"><%= link.clicks %> 클릭</span>
+                                </div>
+                                <div style="background: #e9ecef; border-radius: 10px; height: 20px; overflow: hidden;">
+                                    <div style="background: linear-gradient(to right, #667eea, #764ba2); height: 100%; width: <%= percentage %>%; transition: width 1s ease-in-out; border-radius: 10px;"></div>
+                                </div>
                             </div>
-                            <div class="stat">
-                                <span class="stat-number"><%= links.reduce((sum, link) => sum + link.clicks, 0) %></span>
-                                <span class="stat-label">총 클릭</span>
-                            </div>
-                        </div>
+                        <% }); %>
                     </div>
+                </div>
+                
+            <% } else { %>
+                <div class="empty-state">
+                    <div class="empty-icon">🔗</div>
+                    <h3>아직 만든 링크가 없습니다</h3>
+                    <p style="color: #666; margin: 1rem 0;">첫 번째 단축 URL을 만들어보세요!</p>
+                    <a href="/" class="action-btn visit-btn" style="font-size: 1rem; padding: 0.75rem 2rem;">
+                        ➕ 첫 링크 만들기
+                    </a>
                 </div>
             <% } %>
         </main>
 
-        <footer>
+        <footer style="margin-top: 3rem;">
             <p>간단하고 빠른 URL 단축 서비스 | WPST Shop | <a href="https://wpst.shop" style="color: inherit;">wpst.shop</a></p>
         </footer>
     </div>
@@ -94,12 +413,14 @@
             navigator.clipboard.writeText(url).then(function() {
                 const btn = event.target;
                 const originalText = btn.textContent;
-                btn.textContent = '복사됨!';
+                btn.textContent = '✅ 복사됨!';
                 btn.style.background = '#27ae60';
+                btn.style.color = 'white';
                 
                 setTimeout(() => {
                     btn.textContent = originalText;
                     btn.style.background = '';
+                    btn.style.color = '';
                 }, 2000);
             }).catch(function() {
                 const input = document.createElement('input');
@@ -111,15 +432,46 @@
                 
                 const btn = event.target;
                 const originalText = btn.textContent;
-                btn.textContent = '복사됨!';
+                btn.textContent = '✅ 복사됨!';
                 btn.style.background = '#27ae60';
+                btn.style.color = 'white';
                 
                 setTimeout(() => {
                     btn.textContent = originalText;
                     btn.style.background = '';
+                    btn.style.color = '';
                 }, 2000);
             });
         }
+        
+        function filterLinks() {
+            const searchInput = document.getElementById('searchInput');
+            const filter = searchInput.value.toLowerCase();
+            const linkRows = document.querySelectorAll('.link-row');
+            
+            linkRows.forEach(row => {
+                const text = row.getAttribute('data-url').toLowerCase();
+                if (text.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // 애니메이션 효과
+        document.addEventListener('DOMContentLoaded', function() {
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
     </script>
 </body>
 </html>

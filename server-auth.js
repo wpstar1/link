@@ -86,66 +86,11 @@ function isValidUrl(string) {
 
 // 메인 페이지
 app.get('/', async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
-    const offset = (page - 1) * limit;
-    
-    try {
-        // 전체 링크 수 가져오기
-        const { count } = await supabase
-            .from('urls')
-            .select('*', { count: 'exact', head: true });
-        
-        // 페이지에 해당하는 링크 가져오기
-        const { data: links, error } = await supabase
-            .from('urls')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .range(offset, offset + limit - 1);
-        
-        if (error) throw error;
-        
-        const totalPages = Math.ceil(count / limit);
-        
-        // 링크 데이터 형식 변환
-        const formattedLinks = links.map(link => ({
-            shortCode: link.short_code,
-            originalUrl: link.original_url,
-            clicks: link.clicks,
-            createdAt: link.created_at,
-            shortUrl: `https://wpst.shop/${link.short_code}`,
-            isOwner: req.session.userId === link.user_id
-        }));
-        
-        res.render('index', { 
-            shortUrl: null, 
-            error: null,
-            shortCode: null,
-            links: formattedLinks,
-            pagination: {
-                currentPage: page,
-                totalPages: totalPages,
-                totalLinks: count,
-                hasNext: page < totalPages,
-                hasPrev: page > 1
-            }
-        });
-    } catch (error) {
-        console.error('링크 목록 조회 오류:', error);
-        res.render('index', { 
-            shortUrl: null, 
-            error: null,  // 에러 메시지 제거
-            shortCode: null,
-            links: [],
-            pagination: {
-                currentPage: 1,
-                totalPages: 1,
-                totalLinks: 0,
-                hasNext: false,
-                hasPrev: false
-            }
-        });
-    }
+    res.render('index', { 
+        shortUrl: null, 
+        error: null,
+        shortCode: null
+    });
 });
 
 // Supabase 테이블 권한 테스트
@@ -468,79 +413,19 @@ app.post('/shorten', async (req, res) => {
     const { url } = req.body;
     const userId = req.session.userId || null;
     
-    // 페이지네이션 데이터 가져오기 함수
-    const getAllLinksWithPagination = async (page = 1) => {
-        const limit = 10;
-        const offset = (page - 1) * limit;
-        
-        try {
-            const { count } = await supabase
-                .from('urls')
-                .select('*', { count: 'exact', head: true });
-            
-            const { data: links, error } = await supabase
-                .from('urls')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .range(offset, offset + limit - 1);
-            
-            if (error) throw error;
-            
-            const totalPages = Math.ceil(count / limit);
-            
-            const formattedLinks = links.map(link => ({
-                shortCode: link.short_code,
-                originalUrl: link.original_url,
-                clicks: link.clicks,
-                createdAt: link.created_at,
-                shortUrl: `https://wpst.shop/${link.short_code}`,
-                isOwner: req.session.userId === link.user_id
-            }));
-            
-            return {
-                links: formattedLinks,
-                pagination: {
-                    currentPage: page,
-                    totalPages: totalPages,
-                    totalLinks: count,
-                    hasNext: page < totalPages,
-                    hasPrev: page > 1
-                }
-            };
-        } catch (error) {
-            console.error('링크 목록 조회 오류:', error);
-            return {
-                links: [],
-                pagination: {
-                    currentPage: 1,
-                    totalPages: 1,
-                    totalLinks: 0,
-                    hasNext: false,
-                    hasPrev: false
-                }
-            };
-        }
-    };
-    
     if (!url) {
-        const data = await getAllLinksWithPagination(1);
         return res.render('index', { 
             shortUrl: null, 
             error: 'URL을 입력해주세요.',
-            shortCode: null,
-            links: data.links,
-            pagination: data.pagination
+            shortCode: null
         });
     }
 
     if (!isValidUrl(url)) {
-        const data = await getAllLinksWithPagination(1);
         return res.render('index', { 
             shortUrl: null, 
             error: '유효한 URL을 입력해주세요.',
-            shortCode: null,
-            links: data.links,
-            pagination: data.pagination
+            shortCode: null
         });
     }
 
@@ -624,35 +509,26 @@ app.post('/shorten', async (req, res) => {
                 hint: insertError.hint,
                 code: insertError.code
             });
-            const data = await getAllLinksWithPagination(1);
             return res.render('index', { 
                 shortUrl: null, 
                 error: `링크 저장 실패: ${insertError.message || '다시 시도해주세요.'}`,
-                shortCode: null,
-                links: data.links,
-                pagination: data.pagination
+                shortCode: null
             });
         }
 
         const shortUrl = `https://wpst.shop/${shortCode}`;
-        const data = await getAllLinksWithPagination(1);
         
         res.render('index', { 
             shortUrl, 
             error: null,
-            shortCode,
-            links: data.links,
-            pagination: data.pagination
+            shortCode
         });
     } catch (error) {
         console.error('URL 단축 처리 오류:', error);
-        const data = await getAllLinksWithPagination(1);
         res.render('index', { 
             shortUrl: null, 
             error: '처리 중 오류가 발생했습니다. 다시 시도해주세요.',
-            shortCode: null,
-            links: data.links,
-            pagination: data.pagination
+            shortCode: null
         });
     }
 });
