@@ -148,6 +148,51 @@ app.get('/', async (req, res) => {
     }
 });
 
+// Supabase 테이블 권한 테스트
+app.get('/test-table-permissions', async (req, res) => {
+    try {
+        // INSERT 테스트
+        const testCode = 'test' + Date.now().toString().slice(-6);
+        const { data: insertData, error: insertError } = await supabase
+            .from('urls')
+            .insert([{
+                short_code: testCode,
+                original_url: 'https://test.com',
+                user_id: null,
+                clicks: 0
+            }])
+            .select()
+            .single();
+        
+        if (insertError) {
+            return res.json({
+                status: 'error',
+                operation: 'insert',
+                error: insertError.message,
+                details: insertError
+            });
+        }
+        
+        // 삽입 성공하면 삭제
+        await supabase
+            .from('urls')
+            .delete()
+            .eq('short_code', testCode);
+        
+        res.json({
+            status: 'success',
+            message: 'Table permissions are working correctly',
+            insertedData: insertData
+        });
+    } catch (error) {
+        res.json({
+            status: 'error',
+            message: 'Test failed',
+            error: error.message
+        });
+    }
+});
+
 // Supabase 연결 테스트 엔드포인트
 app.get('/test-supabase', async (req, res) => {
     try {
@@ -553,23 +598,36 @@ app.post('/shorten', async (req, res) => {
         }
 
         // 새 링크 저장
+        console.log('링크 저장 시도:', {
+            short_code: shortCode,
+            original_url: url,
+            user_id: userId
+        });
+        
         const { data: newUrl, error: insertError } = await supabase
             .from('urls')
             .insert([{
                 short_code: shortCode,
                 original_url: url,
                 user_id: userId,
-                clicks: 0
+                clicks: 0,
+                created_at: new Date().toISOString()
             }])
             .select()
             .single();
         
         if (insertError) {
-            console.error('링크 저장 오류:', insertError);
+            console.error('링크 저장 오류 상세:', {
+                error: insertError,
+                message: insertError.message,
+                details: insertError.details,
+                hint: insertError.hint,
+                code: insertError.code
+            });
             const data = await getAllLinksWithPagination(1);
             return res.render('index', { 
                 shortUrl: null, 
-                error: '링크 저장에 실패했습니다. 다시 시도해주세요.',
+                error: `링크 저장 실패: ${insertError.message || '다시 시도해주세요.'}`,
                 shortCode: null,
                 links: data.links,
                 pagination: data.pagination
