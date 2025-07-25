@@ -70,8 +70,6 @@
                     <a href="/my-links" class="btn" style="margin-right: 0.5rem;">내 링크</a>
                     <a href="/logout" class="btn btn-secondary">로그아웃</a>
                 <% } else { %>
-                    <a href="/login" class="btn" style="margin-right: 0.5rem;">로그인</a>
-                    <a href="/signup" class="btn btn-primary" style="margin-right: 0.5rem;">회원가입</a>
                     <button onclick="loginWithGoogle()" class="btn" style="background: #4285f4; color: white;">
                         <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 5px;">
                             <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -81,6 +79,7 @@
                         </svg>
                         구글로 로그인
                     </button>
+                    <p style="margin-top: 0.8rem; font-size: 0.9rem; color: #666;">통계를 확인하려면 구글로 로그인을 해주세요</p>
                 <% } %>
             </div>
         </header>
