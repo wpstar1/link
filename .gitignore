@@ -40,5 +40,9 @@ coverage/
 # Vercel
 .vercel
 
-# Local data file
+# Local data files
 data.json
+data.json.bak
+data.json.tmp
+data.json.emergency
+*.bak
