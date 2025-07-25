@@ -32,14 +32,16 @@ app.set('trust proxy', 1);
 // 세션 설정
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Vercel 환경에서 세션 유지를 위해 true로 변경
+    saveUninitialized: true, // 초기화되지 않은 세션도 저장
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 365 * 24 * 60 * 60 * 1000, // 1년
-        sameSite: 'lax'
-    }
+        sameSite: 'lax',
+        domain: process.env.NODE_ENV === 'production' ? '.wpst.shop' : undefined
+    },
+    name: 'wpst.sid' // 세션 쿠키 이름 지정
 }));
 
 app.use(express.urlencoded({ extended: true }));
@@ -154,6 +156,12 @@ app.get('/debug-all-links', async (req, res) => {
         res.json({
             totalLinks: allLinks.length,
             currentUserId: req.session.userId || 'Not logged in',
+            currentUserEmail: req.session.userEmail || 'Not logged in',
+            sessionInfo: {
+                sessionID: req.sessionID,
+                cookie: req.session.cookie,
+                user: res.locals.user
+            },
             links: allLinks.map(link => ({
                 shortCode: link.short_code,
                 userId: link.user_id,
